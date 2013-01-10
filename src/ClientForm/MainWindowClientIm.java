@@ -16,6 +16,7 @@ import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.ListSelectionModel;
 import javax.swing.text.BadLocationException;
@@ -34,7 +35,7 @@ public class MainWindowClientIm extends javax.swing.JFrame {
    // DefaultListModel defaultListModel;
     private FriendListModel myListModel;
     private int currentSessionId;
-    JFrame SetNickFrame;
+    JDialog SetNickFrame;
     Gson gson   =   new Gson();
     /**
      * Creates new form MainWindowClientIm
@@ -297,17 +298,20 @@ public class MainWindowClientIm extends javax.swing.JFrame {
 
     private void setNickButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setNickButtonActionPerformed
         // TODO add your handling code here:
+        this.setEnabled(false);
         java.awt.EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
                 SetNickFrame = SetNickWindow.getInstance(proxyWindow);
                 SetNickFrame.setVisible(true);
+                
             }});
         
     }//GEN-LAST:event_setNickButtonActionPerformed
     public void setNewNick(String nick)
     {
         String textMessage = gson.toJson(nick);
+        this.setEnabled(true);
         try 
         {            
             threadWrite.sendMessage( new ObjectExchangeWrap(ThreadWorker.OUT_FRIEND_CHANGE_NICK, textMessage).getObjectExchange());
@@ -400,7 +404,13 @@ public class MainWindowClientIm extends javax.swing.JFrame {
          FriendList.setModel(myListModel);
 
     }
-    
+    public WindowParameter getWindowParameter()
+    {
+        WindowParameter windowParameter =   new WindowParameter();
+        windowParameter.dimension   =   getSize();
+        windowParameter.location    =   getLocation();
+        return windowParameter;
+    }
     public void changeFriendList(Friend friend)
     {
         int index  = myListModel.searchIndexElement(friend);

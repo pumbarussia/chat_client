@@ -91,4 +91,9 @@ public class ProxyWindow
             }
         });
     }
+    
+    public WindowParameter getWindowParameter()
+    {
+        return window.getWindowParameter();
+    }
 }
