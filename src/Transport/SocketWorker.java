@@ -29,8 +29,7 @@ public class SocketWorker
     {
         try
         {
-            socket  =   new Socket(hostname,port);
-            
+            socket  =   new Socket(hostname,port);   
         }
         catch (UnknownHostException unk)
         {

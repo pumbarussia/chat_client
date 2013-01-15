@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.ListSelectionModel;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
@@ -32,7 +31,6 @@ public class MainWindowClientIm extends javax.swing.JFrame {
     private ProxyWindow proxyWindow;
     private ThreadWorker threadWrite;
     private int CurrentStatus;
-   // DefaultListModel defaultListModel;
     private FriendListModel myListModel;
     private int currentSessionId;
     JDialog SetNickFrame;
@@ -48,8 +46,8 @@ public class MainWindowClientIm extends javax.swing.JFrame {
         MessageTextPane.setEditable(false);
         this.FriendList.setAutoscrolls(true);
         this.FriendList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        FriendList.removeAll();
-        this.proxyWindow    =   new ProxyWindow(this); 
+        FriendList.removeAll(); 
+        this.proxyWindow    =   new ProxyWindow(this);
         this.addWindowListener(new WindowAdapter() 
                 {
                     @Override
@@ -111,7 +109,7 @@ public class MainWindowClientIm extends javax.swing.JFrame {
             return false;
         }
         else{
-            ThreadWorker  threadWriter       =   new ThreadWorker(socketWorker,proxyWindow);
+            ThreadWorker  threadWriter       =   new ThreadWorker(socketWorker.getSocket(), proxyWindow);
           
             threadWriter.setPriority(ThreadWorker.NORM_PRIORITY);
             threadWriter.start();

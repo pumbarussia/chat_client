@@ -2,7 +2,6 @@ package ThreadWorker;
 
 import ClientForm.*;
 import ObjectExchange.*;
-import Transport.*;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import java.io.*;
@@ -11,12 +10,13 @@ import java.net.*;
 import java.util.*;
 public class ThreadWorker extends Thread
 {
-    protected SocketWorker socketWorker   = null;
-    protected Socket socket = null;
+    //protected SocketWorker socketWorker   = null;
+    private Socket socket = null;
+    private ProxyWindow proxyWindow;
     
-    ObjectInputStream  reader;
-    ObjectOutputStream writer;
-    ProxyWindow proxyWindow;
+    private ObjectInputStream  reader;
+    private ObjectOutputStream writer;
+
     ArrayList<Friend> chat_user_list;
     protected   final static int IN_MESSAGE_RECEIVE             =   1;  //Сервер говорит "Ваше сообщение получено"
     protected   final static int OUT_MESSAGE_RECEIVE            =   1;  //Клиент говорит "Ваше сообщение получено"
@@ -47,15 +47,14 @@ public class ThreadWorker extends Thread
         
 
 
-    public ThreadWorker(SocketWorker socketWorker, ProxyWindow proxyWindow)
+    public ThreadWorker(Socket socket, ProxyWindow proxyWindow)
     {
-        this.socketWorker   =   socketWorker;
-        this.socket         =   socketWorker.getSocket();
+        this.socket         =   socket;
         this.proxyWindow    =   proxyWindow;
         System.out.println("ThreadWorker constructed");
     }
     
-    public void initialize() throws IOException
+    public void initializeStreams() throws IOException
     {
         System.out.println("ThreadWorker# initialize start");
         writer = new ObjectOutputStream((socket.getOutputStream()));
@@ -83,7 +82,9 @@ public class ThreadWorker extends Thread
             writer.close();
             reader.close();
             socket.close();
+            this.interrupt();
             System.out.println("Showdown input and output");
+            
         }
         catch (Exception e)
         {
@@ -97,7 +98,7 @@ public class ThreadWorker extends Thread
         try
         {
             System.out.println("New connection"+socket.getRemoteSocketAddress());
-            initialize();
+            initializeStreams();
             sendMessage( new ObjectExchangeWrap(OUT_CONNECT_START, null, 0).getObjectExchange());
             System.out.println("ThreadWorker# getTransactionId success");
             ObjectExchange data;
