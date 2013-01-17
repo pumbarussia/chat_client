@@ -67,7 +67,8 @@ public class ThreadWorker extends Thread
     {
         synchronized (this)
         {
-            if (writer  != null){
+            if (writer  != null &&  !socket.isClosed() )
+            {
                 data.friend_id  =   transactionId;
                 writer.writeObject(data);
                 writer.flush();
@@ -78,13 +79,16 @@ public class ThreadWorker extends Thread
     {
         try
         {  
+            if ((socket == null) || socket.isClosed())
+            {
+                return;
+            }
             sendMessage(new ObjectExchangeWrap(OUT_SESSION_CLOSE, null, transactionId).getObjectExchange());
             writer.close();
             reader.close();
             socket.close();
             this.interrupt();
             System.out.println("Showdown input and output");
-            
         }
         catch (Exception e)
         {
@@ -101,6 +105,7 @@ public class ThreadWorker extends Thread
             initializeStreams();
             sendMessage( new ObjectExchangeWrap(OUT_CONNECT_START, null, 0).getObjectExchange());
             System.out.println("ThreadWorker# getTransactionId success");
+            proxyWindow.notifyTransportChangeState(true);
             ObjectExchange data;
             Friend friend;
             Gson gson   =   new Gson();
@@ -166,6 +171,7 @@ public class ThreadWorker extends Thread
         finally {
             try
             {
+                proxyWindow.notifyTransportChangeState(false);
                 reader.close();
                 writer.close();
                 socket.close();

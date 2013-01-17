@@ -96,4 +96,14 @@ public class ProxyWindow
     {
         return window.getWindowParameter();
     }
+    public void notifyTransportChangeState(final boolean all_right)
+    {
+        java.awt.EventQueue.invokeLater(new Runnable(){
+            @Override
+            public void run()
+            {
+                window.notifyTransportChangeState(all_right);
+            }
+        });
+    }
 }

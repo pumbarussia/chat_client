@@ -27,12 +27,6 @@ public class ImClient
         MainWindowClientIm  window  =   new MainWindowClientIm();
         WindowTread windowThread    =   new WindowTread(window);
         java.awt.EventQueue.invokeLater(windowThread);
-//        if (window.initializeThreadWriter())
-//        {
-//            setUserStatus(MainWindowClientIm.ON)
-//        }
         
     }
 }
-/*
-* */

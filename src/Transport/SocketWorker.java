@@ -17,7 +17,7 @@ public class SocketWorker
     
     public Socket getSocket()
     {
-        return  this.socket;
+        return socket;
     }
     public SocketWorker(String hostname, int port)
     {
@@ -34,18 +34,17 @@ public class SocketWorker
         catch (UnknownHostException unk)
         {
             System.out.println("createSocket error: UnknownHostException");
-            socket = null;
-            return socket;
+            return null;
         }
         catch (IOException e)
         {
             System.out.println("createSocket error: IOException");
-            socket = null;
-            return socket;
+            return null;
         }
         System.out.println("createSocket success");
         return socket;
     }
+    @Deprecated
     public void closeSocket()
     {
         try
@@ -59,6 +58,10 @@ public class SocketWorker
         {
             System.out.println("closeSocket error: IOException");
             return;
+        }
+        finally
+        {
+            socket = null;
         }
         System.out.println("closeSocket success");
     }

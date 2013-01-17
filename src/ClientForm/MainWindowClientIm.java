@@ -30,7 +30,7 @@ import javax.swing.text.StyleConstants;
 public class MainWindowClientIm extends javax.swing.JFrame {
     private ProxyWindow proxyWindow;
     private ThreadWorker threadWrite;
-    private int CurrentStatus;
+    private int CurrentStatus = ONLINE_STATUS;
     private FriendListModel myListModel;
     private int currentSessionId;
     JDialog SetNickFrame;
@@ -42,7 +42,7 @@ public class MainWindowClientIm extends javax.swing.JFrame {
     {
         initComponents();
         this.setTitle("IM java messager");
-        CurrentStatus   =   OFFLINE_STATUS;
+        //CurrentStatus   =   OFFLINE_STATUS;
         MessageTextPane.setEditable(false);
         this.FriendList.setAutoscrolls(true);
         this.FriendList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -53,15 +53,17 @@ public class MainWindowClientIm extends javax.swing.JFrame {
                     @Override
                     public void windowOpened(WindowEvent e) 
                     {
-                        int state;
-                        if (initializeThreadWriter())
-                        {
-                            state   =  ONLINE_STATUS;
-                        }
-                        else {
-                            state   =  OFFLINE_STATUS;
-                        }
-                        setUserStatus(state);
+                        initializeThreadWriter();
+
+//                        int state;
+//                        if (initializeThreadWriter())
+//                        {
+//                            state   =  ONLINE_STATUS;
+//                        }
+//                        else {
+//                            state   =  OFFLINE_STATUS;
+//                        }
+                        //setUserStatus(state);
                     }
                     @Override
                     public void windowClosing(WindowEvent e) 
@@ -106,6 +108,7 @@ public class MainWindowClientIm extends javax.swing.JFrame {
         if (socketWorker.getSocket()==null)
         {
             System.out.println("Неудачная попытка создать сокет. Пока");
+            notifyTransportChangeState(false);
             return false;
         }
         else{
@@ -114,7 +117,7 @@ public class MainWindowClientIm extends javax.swing.JFrame {
             threadWriter.setPriority(ThreadWorker.NORM_PRIORITY);
             threadWriter.start();
             this.threadWrite= threadWriter;
-            return true;
+            return true;// may be
         }
     }
 
@@ -140,11 +143,6 @@ public class MainWindowClientIm extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        FriendList.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
         FriendList.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         jScrollPane2.setViewportView(FriendList);
 
@@ -185,17 +183,21 @@ public class MainWindowClientIm extends javax.swing.JFrame {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(TextMessageField)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(TextMessageField)
+                        .addGap(28, 28, 28))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jScrollPane3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(setNickButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 244, Short.MAX_VALUE)
-                        .addComponent(ClearMessageHistoryButton))
-                    .addComponent(jScrollPane3))
-                .addGap(18, 18, 18)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jScrollPane2)
-                    .addComponent(SendMessageButton, javax.swing.GroupLayout.DEFAULT_SIZE, 104, Short.MAX_VALUE)
-                    .addComponent(ClientStatusSelector, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 225, Short.MAX_VALUE)
+                        .addComponent(ClearMessageHistoryButton)
+                        .addGap(0, 10, Short.MAX_VALUE)))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(ClientStatusSelector, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(SendMessageButton, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -203,17 +205,13 @@ public class MainWindowClientIm extends javax.swing.JFrame {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 231, Short.MAX_VALUE)
                     .addComponent(jScrollPane2))
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(18, 18, 18)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(ClearMessageHistoryButton)
-                            .addComponent(setNickButton)))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(ClientStatusSelector, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 40, Short.MAX_VALUE)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(ClientStatusSelector, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(ClearMessageHistoryButton, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(setNickButton))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 52, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(TextMessageField, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(SendMessageButton, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
@@ -233,17 +231,59 @@ public class MainWindowClientIm extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void setNickButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setNickButtonActionPerformed
+        // TODO add your handling code here:
+        this.setEnabled(false);
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                SetNickFrame = SetNickWindow.getInstance(proxyWindow);
+                SetNickFrame.setVisible(true);
+
+            }});
+
+    }//GEN-LAST:event_setNickButtonActionPerformed
+
     private void ClientStatusSelectorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ClientStatusSelectorActionPerformed
         // TODO add your handling code here:
         int status   = ClientStatusSelector.getSelectedIndex();
-        switch(status)
+        
+        
+        switch(CurrentStatus)
+        {
+            case OFFLINE_STATUS:
+                if (status !=  OFFLINE_STATUS)
+                {   
+                    CurrentStatus = status;
+                    initializeThreadWriter();
+                }
+                break;
+            default: 
+                if (status    ==  OFFLINE_STATUS)    
+                {
+                    closeThreadWrite();
+                    CurrentStatus   =   OFFLINE_STATUS;
+                    FriendList.removeAll();       
+                }
+                else if (CurrentStatus != status)
+                {
+                    String json = gson.toJson(status);
+                    try {
+                        threadWrite.sendMessage( new ObjectExchangeWrap(ThreadWorker.OUT_CLIENT_CHANGE_STATUS, json).getObjectExchange());
+                        CurrentStatus   =   status;
+                    }
+                    catch (IOException e){
+                    }    
+                }
+                break;
+        }
+        
+        /*switch(status)
         {
             case ONLINE_STATUS:
                 if (CurrentStatus    ==  OFFLINE_STATUS)
                 {
-                    if (initializeThreadWriter()){
-
-                    }
+                    initializeThreadWriter();               
                 }
                 else if (CurrentStatus    !=  ONLINE_STATUS)
                 {
@@ -258,6 +298,7 @@ public class MainWindowClientIm extends javax.swing.JFrame {
             CurrentStatus   =   ONLINE_STATUS;
             break;
             case INVISIBLE_STATUS:
+                
                 if (CurrentStatus    !=  INVISIBLE_STATUS)
                 {
                     String json = gson.toJson(INVISIBLE_STATUS);
@@ -280,32 +321,18 @@ public class MainWindowClientIm extends javax.swing.JFrame {
                 }
             break;
 
-        }
+        }*/
     }//GEN-LAST:event_ClientStatusSelectorActionPerformed
 
     private void ClearMessageHistoryButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ClearMessageHistoryButtonActionPerformed
 
         MessageTextPane.setText("");
-
     }//GEN-LAST:event_ClearMessageHistoryButtonActionPerformed
 
     private void SendMessageButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SendMessageButtonActionPerformed
 
         sendMessage();
     }//GEN-LAST:event_SendMessageButtonActionPerformed
-
-    private void setNickButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setNickButtonActionPerformed
-        // TODO add your handling code here:
-        this.setEnabled(false);
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                SetNickFrame = SetNickWindow.getInstance(proxyWindow);
-                SetNickFrame.setVisible(true);
-                
-            }});
-        
-    }//GEN-LAST:event_setNickButtonActionPerformed
     public void setNewNick(String nick)
     {
         String textMessage = gson.toJson(nick);
@@ -431,6 +458,20 @@ public class MainWindowClientIm extends javax.swing.JFrame {
         }
        
     }
+    public void notifyTransportChangeState(boolean all_right)
+    {   int status;
+        if (all_right)
+        {
+            //if (CurrentStatus != OFFLINE_STATUS)
+            status = CurrentStatus;
+        }
+        else{
+            status = OFFLINE_STATUS;
+        }
+        //CurrentStatus   =   status;
+         setUserStatus(status);
+    }
+            
     /**
      * @param args the command line arguments
      */
