@@ -268,11 +268,13 @@ public class MainWindowClientIm extends javax.swing.JFrame {
                 else if (CurrentStatus != status)
                 {
                     String json = gson.toJson(status);
+                    int prevStatus = CurrentStatus;
                     try {
                         threadWrite.sendMessage( new ObjectExchangeWrap(ThreadWorker.OUT_CLIENT_CHANGE_STATUS, json).getObjectExchange());
                         CurrentStatus   =   status;
                     }
                     catch (IOException e){
+                        setUserStatus(prevStatus);
                     }    
                 }
                 break;
