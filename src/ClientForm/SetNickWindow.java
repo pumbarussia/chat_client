@@ -55,7 +55,7 @@ public class SetNickWindow extends javax.swing.JDialog
             }
             
         });
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        //setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
     }
     public static SetNickWindow getInstance (ProxyWindow proxyMainWindow)
     {

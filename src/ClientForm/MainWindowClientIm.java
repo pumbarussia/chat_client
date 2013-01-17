@@ -54,16 +54,6 @@ public class MainWindowClientIm extends javax.swing.JFrame {
                     public void windowOpened(WindowEvent e) 
                     {
                         initializeThreadWriter();
-
-//                        int state;
-//                        if (initializeThreadWriter())
-//                        {
-//                            state   =  ONLINE_STATUS;
-//                        }
-//                        else {
-//                            state   =  OFFLINE_STATUS;
-//                        }
-                        //setUserStatus(state);
                     }
                     @Override
                     public void windowClosing(WindowEvent e) 
@@ -239,7 +229,6 @@ public class MainWindowClientIm extends javax.swing.JFrame {
             public void run() {
                 SetNickFrame = SetNickWindow.getInstance(proxyWindow);
                 SetNickFrame.setVisible(true);
-
             }});
 
     }//GEN-LAST:event_setNickButtonActionPerformed
@@ -280,50 +269,6 @@ public class MainWindowClientIm extends javax.swing.JFrame {
                 break;
         }
         
-        /*switch(status)
-        {
-            case ONLINE_STATUS:
-                if (CurrentStatus    ==  OFFLINE_STATUS)
-                {
-                    initializeThreadWriter();               
-                }
-                else if (CurrentStatus    !=  ONLINE_STATUS)
-                {
-
-                    String json = gson.toJson(ONLINE_STATUS);
-                    try {
-                        threadWrite.sendMessage( new ObjectExchangeWrap(ThreadWorker.OUT_CLIENT_CHANGE_STATUS, json).getObjectExchange());
-                    }
-                    catch (IOException e){
-                    }
-                }
-            CurrentStatus   =   ONLINE_STATUS;
-            break;
-            case INVISIBLE_STATUS:
-                
-                if (CurrentStatus    !=  INVISIBLE_STATUS)
-                {
-                    String json = gson.toJson(INVISIBLE_STATUS);
-                    CurrentStatus   =   INVISIBLE_STATUS;
-                    try {
-                        threadWrite.sendMessage( new ObjectExchangeWrap(ThreadWorker.OUT_CLIENT_CHANGE_STATUS, json).getObjectExchange());
-                    }
-                    catch (IOException e)
-                    {
-                    }
-                }
-
-            break;
-            case OFFLINE_STATUS:
-                if (CurrentStatus    !=  OFFLINE_STATUS)
-                {
-                    closeThreadWrite();
-                    CurrentStatus   =   OFFLINE_STATUS;
-                    FriendList.removeAll();
-                }
-            break;
-
-        }*/
     }//GEN-LAST:event_ClientStatusSelectorActionPerformed
 
     private void ClearMessageHistoryButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ClearMessageHistoryButtonActionPerformed
@@ -342,12 +287,13 @@ public class MainWindowClientIm extends javax.swing.JFrame {
         try 
         {            
             threadWrite.sendMessage( new ObjectExchangeWrap(ThreadWorker.OUT_FRIEND_CHANGE_NICK, textMessage).getObjectExchange());
+            myListModel.changeElementNickName(currentSessionId, nick);
         }
         catch (IOException e)
         {
            //Произошла ошибка отправки 
         }
-        myListModel.changeElementNickName(currentSessionId, nick);
+        
     }
     public void changeFriendNickName(Friend receivefriend)
     {
@@ -390,20 +336,19 @@ public class MainWindowClientIm extends javax.swing.JFrame {
             textMessage = TextMessageField.getText().trim();
             if (!"".equals(textMessage))
             {
-                SimpleAttributeSet keyWord = new SimpleAttributeSet();
-                StyleConstants.setForeground(keyWord, Color.RED);
-                StyleConstants.setBackground(keyWord, Color.YELLOW);
-                StyleConstants.setBold(keyWord, true);
-
-                SimpleDateFormat    simpleDateFormat=    new SimpleDateFormat("hh:mm:ss");
-                String date     =   simpleDateFormat.format(new Date());
-
                 try {
+                    threadWrite.sendMessage( new ObjectExchangeWrap(ThreadWorker.OUT_MESSAGE_FOR_ALL_FRIENDS, textMessage).getObjectExchange());
+                    SimpleAttributeSet keyWord = new SimpleAttributeSet();
+                    StyleConstants.setForeground(keyWord, Color.RED);
+                    StyleConstants.setBackground(keyWord, Color.YELLOW);
+                    StyleConstants.setBold(keyWord, true);
+
+                    SimpleDateFormat    simpleDateFormat=    new SimpleDateFormat("hh:mm:ss");
+                    String date     =   simpleDateFormat.format(new Date());
                     document.insertString(document.getLength(), "Me\n", keyWord );
                     document.insertString(document.getLength(), date+"\n", null );
-
                     document.insertString(document.getLength(), textMessage+"\n", null );
-                    threadWrite.sendMessage( new ObjectExchangeWrap(ThreadWorker.OUT_MESSAGE_FOR_ALL_FRIENDS, textMessage).getObjectExchange());
+                    TextMessageField.setText("");
                 }
                 catch (IOException e)
                 {
@@ -411,9 +356,7 @@ public class MainWindowClientIm extends javax.swing.JFrame {
                 }
                 catch(BadLocationException exception)
                 {
-
-                }
-                TextMessageField.setText("");
+                }               
             }
         }
     }
