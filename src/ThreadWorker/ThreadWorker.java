@@ -75,6 +75,17 @@ public class ThreadWorker extends Thread
             }
         }
     }
+    public void senStartMessage(ObjectExchange data) throws IOException
+    {
+        synchronized (this)
+        {
+            if (writer  != null &&  !socket.isClosed() )
+            {
+                writer.writeObject(data);
+                writer.flush();
+            }
+        }
+    }
     public void closedSession()
     {
         try
@@ -103,7 +114,8 @@ public class ThreadWorker extends Thread
         {
             System.out.println("New connection"+socket.getRemoteSocketAddress());
             initializeStreams();
-            sendMessage( new ObjectExchangeWrap(OUT_CONNECT_START, null, 0).getObjectExchange());
+            int ii = proxyWindow.getCurrentStatus();
+            senStartMessage( new ObjectExchangeWrap(OUT_CONNECT_START, null, ii).getObjectExchange());
             System.out.println("ThreadWorker# getTransactionId success");
             proxyWindow.notifyTransportChangeState(true);
             ObjectExchange data;

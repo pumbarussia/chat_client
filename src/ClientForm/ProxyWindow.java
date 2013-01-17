@@ -12,6 +12,11 @@ import java.util.ArrayList;
 public class ProxyWindow
 {
     private MainWindowClientIm  window;
+    public int getCurrentStatus()
+    {
+        return window.getCurrentStatus();
+    }
+
     public ProxyWindow(MainWindowClientIm  window)
     {
         this.window  =   window;  

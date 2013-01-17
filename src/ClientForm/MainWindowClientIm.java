@@ -30,7 +30,7 @@ import javax.swing.text.StyleConstants;
 public class MainWindowClientIm extends javax.swing.JFrame {
     private ProxyWindow proxyWindow;
     private ThreadWorker threadWrite;
-    private int CurrentStatus = ONLINE_STATUS;
+    private volatile int CurrentStatus = ONLINE_STATUS;
     private FriendListModel myListModel;
     private int currentSessionId;
     JDialog SetNickFrame;
@@ -71,7 +71,10 @@ public class MainWindowClientIm extends javax.swing.JFrame {
         });
         System.out.println("FORM CREATED");
     }
-    
+    public int getCurrentStatus()
+    {
+        return CurrentStatus;
+    }
     public void setThreadWorker(ThreadWorker threadWrite)
     {
         this.threadWrite    =   threadWrite;
@@ -90,7 +93,7 @@ public class MainWindowClientIm extends javax.swing.JFrame {
             threadWrite.closedSession();
         }
     }
-    public boolean initializeThreadWriter()
+    public void initializeThreadWriter()
     {
            
         SocketWorker    socketWorker    =   new SocketWorker("localhost",4444);
@@ -99,7 +102,7 @@ public class MainWindowClientIm extends javax.swing.JFrame {
         {
             System.out.println("Неудачная попытка создать сокет. Пока");
             notifyTransportChangeState(false);
-            return false;
+            //return false;
         }
         else{
             ThreadWorker  threadWriter       =   new ThreadWorker(socketWorker.getSocket(), proxyWindow);
@@ -107,7 +110,7 @@ public class MainWindowClientIm extends javax.swing.JFrame {
             threadWriter.setPriority(ThreadWorker.NORM_PRIORITY);
             threadWriter.start();
             this.threadWrite= threadWriter;
-            return true;// may be
+            //return true;// may be
         }
     }
 
