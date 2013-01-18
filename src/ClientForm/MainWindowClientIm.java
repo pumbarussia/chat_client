@@ -11,6 +11,10 @@ import com.google.gson.Gson;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
@@ -33,7 +37,8 @@ public class MainWindowClientIm extends javax.swing.JFrame {
     private volatile int CurrentStatus = ONLINE_STATUS;
     private FriendListModel myListModel;
     private int currentSessionId;
-    JDialog SetNickFrame;
+    private ObjectExchange lastReceiveMessage = null;
+    JDialog SetNickFrameDialog;
     Gson gson   =   new Gson();
     /**
      * Creates new form MainWindowClientIm
@@ -41,14 +46,39 @@ public class MainWindowClientIm extends javax.swing.JFrame {
     public MainWindowClientIm() 
     {
         initComponents();
-        this.setTitle("IM java messager");
+        
+        setTitle("IM java messager");
         //CurrentStatus   =   OFFLINE_STATUS;
         MessageTextPane.setEditable(false);
-        this.FriendList.setAutoscrolls(true);
-        this.FriendList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        FriendList.setAutoscrolls(true);
+        FriendList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         FriendList.removeAll(); 
-        this.proxyWindow    =   new ProxyWindow(this);
-        this.addWindowListener(new WindowAdapter() 
+        proxyWindow    =   new ProxyWindow(this);
+        TextMessageField.addKeyListener(new KeyAdapter(){
+            @Override
+            public void keyPressed(KeyEvent e) {
+
+                if ( e.isControlDown())
+                {
+                    int code = e.getKeyCode();
+                    if (code == 82)
+                    {
+                        //System.out.println("test4");
+                        if (lastReceiveMessage != null)
+                        {
+                            System.out.println(lastReceiveMessage.friend_id);
+                            Friend friend = myListModel.getElementAt(lastReceiveMessage.friend_id);
+                            if (friend != null)
+                            {
+                                //System.out.println("STAVSYA");
+                                setNickInTextEditField(friend.nick_name);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        addWindowListener(new WindowAdapter() 
                 {
                     @Override
                     public void windowOpened(WindowEvent e) 
@@ -62,6 +92,21 @@ public class MainWindowClientIm extends javax.swing.JFrame {
                     }
                 }
         );
+        
+        FriendList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+               javax.swing.JList list = (javax.swing.JList)e.getSource();
+               if (e.getClickCount() == 2) {
+                   int index = list.locationToIndex(e.getPoint());
+                   if (index != -1)
+                   {
+                        Friend friend = myListModel.getElementAt(index);
+                        setNickInTextEditField(friend.nick_name);
+                   }
+               } 
+            }
+        });
         TextMessageField.addActionListener(new ActionListener() {
 
             @Override
@@ -70,6 +115,38 @@ public class MainWindowClientIm extends javax.swing.JFrame {
             }
         });
         System.out.println("FORM CREATED");
+        TextMessageField.requestFocusInWindow();
+    }
+    private void setNickInTextEditField(String nick)
+    {
+        String textMessage =  TextMessageField.getText();
+        TextMessageField.setText("<"+nick+"/> "+textMessage);
+        TextMessageField.requestFocusInWindow();
+    }
+    private String[] parseTextMessage(String message)
+    {
+        int indexReceiverFirst = message.indexOf('<');
+        if (indexReceiverFirst != 0)
+        {
+            return new String[] {"", message};
+        }   
+        int indexReceiverLast = message.indexOf("/>");
+        if (indexReceiverLast == -1)
+        {
+            return new String[] {"", message};
+        }   
+        if(indexReceiverFirst> indexReceiverLast)
+        {
+            return new String[]{"", message};
+        }
+        if (indexReceiverLast+2>= message.length())
+        {
+            return new String[]{message.substring(indexReceiverFirst+1,indexReceiverLast), ""};    
+        }
+        String receiver = message.substring(indexReceiverFirst+1,indexReceiverLast);
+        String textMessage = message.substring(indexReceiverLast+2).trim();
+        
+        return new String[]{receiver, textMessage};
     }
     public int getCurrentStatus()
     {
@@ -230,8 +307,8 @@ public class MainWindowClientIm extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                SetNickFrame = SetNickWindow.getInstance(proxyWindow);
-                SetNickFrame.setVisible(true);
+                SetNickFrameDialog = SetNickWindow.getInstance(proxyWindow);
+                SetNickFrameDialog.setVisible(true);
             }});
 
     }//GEN-LAST:event_setNickButtonActionPerformed
@@ -282,6 +359,7 @@ public class MainWindowClientIm extends javax.swing.JFrame {
     private void SendMessageButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SendMessageButtonActionPerformed
 
         sendMessage();
+        TextMessageField.requestFocusInWindow();
     }//GEN-LAST:event_SendMessageButtonActionPerformed
     public void setNewNick(String nick)
     {
@@ -303,7 +381,16 @@ public class MainWindowClientIm extends javax.swing.JFrame {
         myListModel.changeElementNickName(receivefriend.uid, receivefriend.nick_name);
 
     }
-    
+    public void newIncomingMessage(ObjectExchange objectExchange)
+    {
+        if (objectExchange.message_code == ThreadWorker.IN_PRIVATE_MESSAGE)
+        {
+            System.out.println("Incoming message");
+            lastReceiveMessage = objectExchange;
+        }
+        
+        setNewMessage(objectExchange);
+    }
     public void setNewMessage(ObjectExchange objectExchange)
     {
         Document document=  MessageTextPane.getDocument();
@@ -321,7 +408,12 @@ public class MainWindowClientIm extends javax.swing.JFrame {
             friendName  =   objectExchange.friend_id+"";
         }
         try{
-            document.insertString(document.getLength(), friendName+"\n", keyWord );
+            SimpleDateFormat    simpleDateFormat=    new SimpleDateFormat("hh:mm:ss");
+            String date     =   "("+simpleDateFormat.format(new Date())+") ";
+            //StyleConstants.setForeground(keyWord, Color.BLACK);
+            StyleConstants.setBackground(keyWord, Color.WHITE);
+            document.insertString(document.getLength(), date, null );
+            document.insertString(document.getLength(), "<"+ friendName+"> : ", keyWord );
             document.insertString(document.getLength(), objectExchange.message+"\n", null );
         }
         catch (BadLocationException badLocationException)
@@ -337,21 +429,48 @@ public class MainWindowClientIm extends javax.swing.JFrame {
         {
             String  textMessage;
             textMessage = TextMessageField.getText().trim();
-            if (!"".equals(textMessage))
+            String[] messageInfo = parseTextMessage(textMessage);
+            System.out.println(messageInfo[0]);
+            System.out.println(messageInfo[1]);
+            if (!"".equals(messageInfo[1]))
             {
                 try {
-                    threadWrite.sendMessage( new ObjectExchangeWrap(ThreadWorker.OUT_MESSAGE_FOR_ALL_FRIENDS, textMessage).getObjectExchange());
-                    SimpleAttributeSet keyWord = new SimpleAttributeSet();
-                    StyleConstants.setForeground(keyWord, Color.RED);
-                    StyleConstants.setBackground(keyWord, Color.YELLOW);
-                    StyleConstants.setBold(keyWord, true);
-
-                    SimpleDateFormat    simpleDateFormat=    new SimpleDateFormat("hh:mm:ss");
-                    String date     =   simpleDateFormat.format(new Date());
-                    document.insertString(document.getLength(), "Me\n", keyWord );
-                    document.insertString(document.getLength(), date+"\n", null );
-                    document.insertString(document.getLength(), textMessage+"\n", null );
-                    TextMessageField.setText("");
+                    String toName   =   "";
+                    boolean is_not_send = false;
+                    
+                    if (!"".equals(messageInfo[0]))
+                    {
+                        toName = " to "+ messageInfo[0];
+                        Friend friend = myListModel.searchElement(messageInfo[0]);
+                        if (friend != null )
+                        {
+                            threadWrite.sendMessage( new ObjectExchangeWrap(ThreadWorker.OUT_MESSAGE_FOR_FRIEND, messageInfo[1],friend.uid).getObjectExchange());
+                        }
+                        else
+                        {
+                            is_not_send = true;
+                        }
+                    }
+                    else
+                    {
+                        threadWrite.sendMessage( new ObjectExchangeWrap(ThreadWorker.OUT_MESSAGE_FOR_ALL_FRIENDS, messageInfo[1]).getObjectExchange());
+                    }
+                    if (!is_not_send)
+                    {
+                        SimpleAttributeSet keyWord = new SimpleAttributeSet();
+                        StyleConstants.setBold(keyWord, true);
+                        SimpleDateFormat    simpleDateFormat=    new SimpleDateFormat("hh:mm:ss");
+                        String date     =   "("+simpleDateFormat.format(new Date())+") ";
+                        //StyleConstants.setForeground(keyWord, Color.BLACK);
+                        StyleConstants.setBackground(keyWord, Color.WHITE);
+                        document.insertString(document.getLength(), date, null );
+                        StyleConstants.setForeground(keyWord, Color.GREEN);
+                       
+                        document.insertString(document.getLength(), "Me"+toName+": ", keyWord );
+                        
+                        document.insertString(document.getLength(), messageInfo[1]+"\n", null );
+                        TextMessageField.setText("");
+                    }
                 }
                 catch (IOException e)
                 {
@@ -410,50 +529,15 @@ public class MainWindowClientIm extends javax.swing.JFrame {
     {   int status;
         if (all_right)
         {
-            //if (CurrentStatus != OFFLINE_STATUS)
             status = CurrentStatus;
         }
-        else{
+        else
+        {
             status = OFFLINE_STATUS;
         }
-        //CurrentStatus   =   status;
          setUserStatus(status);
     }
             
-    /**
-     * @param args the command line arguments
-     */
-//    public static void main(String args[]) {
-//        /* Set the Nimbus look and feel */
-//        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-//        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-//         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-//         */
-//        try {
-//            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-//                if ("Nimbus".equals(info.getName())) {
-//                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-//                    break;
-//                }
-//            }
-//        } catch (ClassNotFoundException ex) {
-//            java.util.logging.Logger.getLogger(MainWindowClientIm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-//        } catch (InstantiationException ex) {
-//            java.util.logging.Logger.getLogger(MainWindowClientIm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-//        } catch (IllegalAccessException ex) {
-//            java.util.logging.Logger.getLogger(MainWindowClientIm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-//        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-//            java.util.logging.Logger.getLogger(MainWindowClientIm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-//        }
-//        //</editor-fold>
-//
-//        /* Create and display the form */
-//        java.awt.EventQueue.invokeLater(new Runnable() {
-//            public void run() {
-//                new MainWindowClientIm().setVisible(true);
-//            }
-//        });
-//    }
     private static final int ONLINE_STATUS      =   0;
     private static final int INVISIBLE_STATUS   =   1;
     private static final int OFFLINE_STATUS     =   2;

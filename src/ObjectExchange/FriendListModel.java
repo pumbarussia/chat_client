@@ -14,7 +14,6 @@ import javax.swing.AbstractListModel;
 public class FriendListModel<E extends Friend> extends AbstractListModel
 {
     private static final long serialVersionUID = 1L;
-   // protected EventListenerList listenerList = new EventListenerList();
     private ArrayList<E> list;
     public  FriendListModel(ArrayList<E> list)
     {
@@ -22,15 +21,23 @@ public class FriendListModel<E extends Friend> extends AbstractListModel
     }
 
     @Override
-    public int getSize() {
+    public int getSize() 
+    {
         return list.size();
-        //throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public Object getElementAt(int index) {
-        return list.get(index);
-        //throw new UnsupportedOperationException("Not supported yet.");
+    public E getElementAt(int index) 
+    {
+        E friend=  null;
+        try
+        {
+             friend = list.get(index);
+        }
+        catch (IndexOutOfBoundsException indexOutOfBoundsException)
+        { 
+        }
+        return friend;
     }
     
     public void add(E e)
@@ -43,8 +50,11 @@ public class FriendListModel<E extends Friend> extends AbstractListModel
     public void remove(E e)
     {
         int index = list.indexOf(e);
-        list.remove(e);
-        fireIntervalRemoved(this, index, index);
+        if (index != -1)
+        {
+            list.remove(e);
+            fireIntervalRemoved(this, index, index);
+        }
     }
     
     public void remove(int index)
@@ -67,7 +77,6 @@ public class FriendListModel<E extends Friend> extends AbstractListModel
     }
     public E searchElement(E element)
     {
-        
         int index = searchIndexElement(element);
         if (index != -1)
         {
@@ -77,7 +86,6 @@ public class FriendListModel<E extends Friend> extends AbstractListModel
     }
     public E searchElement(int uid)
     {
-        
         for (E l: this.list )
         {
             if (l.uid    == uid   ) 
@@ -86,7 +94,18 @@ public class FriendListModel<E extends Friend> extends AbstractListModel
             }
         }
         return null;
-        
+    }
+    public E searchElement(String nick)
+    {
+        //int index = searchIndexElement(element);
+        for (E l: this.list )
+        {
+            if (nick.equals(l.nick_name))
+            {
+                return l;
+            }
+        }
+        return null;
     }
     public boolean changeElementNickName(int uid, String nameString)
     {
@@ -99,6 +118,5 @@ public class FriendListModel<E extends Friend> extends AbstractListModel
             return true;
         }
         return  false;
-
     }
 }

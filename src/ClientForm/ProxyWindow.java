@@ -22,13 +22,13 @@ public class ProxyWindow
         this.window  =   window;  
     }
     
-    public void setText(final ObjectExchange objectExchange)
+    public void newIncomingMessage(final ObjectExchange objectExchange)
     {
         java.awt.EventQueue.invokeLater(new Runnable(){
             @Override
             public void run()
             {
-                window.setNewMessage(objectExchange);
+                window.newIncomingMessage(objectExchange);
             }
         });
     }

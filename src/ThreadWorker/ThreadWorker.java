@@ -22,7 +22,7 @@ public class ThreadWorker extends Thread
     protected   final static int OUT_MESSAGE_RECEIVE            =   1;  //Клиент говорит "Ваше сообщение получено"
     public      final static int OUT_MESSAGE_FOR_FRIEND         =   2;  //
     public      final static int OUT_MESSAGE_FOR_ALL_FRIENDS    =   3;
-    protected   final static int IN_PRIVATE_MESSAGE             =   4;
+    public      final static int IN_PRIVATE_MESSAGE             =   4;
     public      final static int IN_MULTI_CAST_MESSAGE          =   5;
 
     protected final static int OUT_CONNECT_START                =   11;  //Я соеденяюсь
@@ -69,18 +69,7 @@ public class ThreadWorker extends Thread
         {
             if (writer  != null &&  !socket.isClosed() )
             {
-                data.friend_id  =   transactionId;
-                writer.writeObject(data);
-                writer.flush();
-            }
-        }
-    }
-    public void senStartMessage(ObjectExchange data) throws IOException
-    {
-        synchronized (this)
-        {
-            if (writer  != null &&  !socket.isClosed() )
-            {
+              //  data.friend_id  =   transactionId;
                 writer.writeObject(data);
                 writer.flush();
             }
@@ -115,7 +104,7 @@ public class ThreadWorker extends Thread
             System.out.println("New connection"+socket.getRemoteSocketAddress());
             initializeStreams();
             int ii = proxyWindow.getCurrentStatus();
-            senStartMessage( new ObjectExchangeWrap(OUT_CONNECT_START, null, ii).getObjectExchange());
+            sendMessage( new ObjectExchangeWrap(OUT_CONNECT_START, null, ii).getObjectExchange());
             System.out.println("ThreadWorker# getTransactionId success");
             proxyWindow.notifyTransportChangeState(true);
             ObjectExchange data;
@@ -134,14 +123,14 @@ public class ThreadWorker extends Thread
                         System.out.println("Date :"+new Date().toString());
                         System.out.println("Private message from :"+data.friend_id);
                         System.out.println("Message : "+data.message);
-                        proxyWindow.setText(data);
+                        proxyWindow.newIncomingMessage(data);
                         sendMessage(new ObjectExchangeWrap(OUT_MESSAGE_RECEIVE, null, transactionId).getObjectExchange());
                         break;
                     case IN_MULTI_CAST_MESSAGE:
                         System.out.println("Date :"+new Date().toString());
                         System.out.println("Multicast message from :"+data.friend_id);
                         System.out.println("Message : "+data.message);
-                        proxyWindow.setText(data);
+                        proxyWindow.newIncomingMessage(data);
                         sendMessage(new ObjectExchangeWrap(OUT_MESSAGE_RECEIVE, null, transactionId).getObjectExchange());
                         break;
                     //    
