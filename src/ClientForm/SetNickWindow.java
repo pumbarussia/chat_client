@@ -7,6 +7,8 @@ package ClientForm;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import javax.swing.*;
@@ -43,7 +45,13 @@ public class SetNickWindow extends javax.swing.JDialog
                 buttonOkActionPerformed(evt);
             }
         });
-        
+        textField.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                 buttonOkActionPerformed(e);
+            }
+        });
         this.addComponentListener(new ComponentAdapter( ) {
 
             @Override

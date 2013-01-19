@@ -33,7 +33,7 @@ import javax.swing.text.StyleConstants;
 
 public class MainWindowClientIm extends javax.swing.JFrame {
     private ProxyWindow proxyWindow;
-    private ThreadWorker threadWrite;
+    private ThreadWorker threadWrite = null;
     private volatile int CurrentStatus = ONLINE_STATUS;
     private FriendListModel myListModel;
     private int currentSessionId;
@@ -67,7 +67,7 @@ public class MainWindowClientIm extends javax.swing.JFrame {
                         if (lastReceiveMessage != null)
                         {
                             System.out.println(lastReceiveMessage.friend_id);
-                            Friend friend = myListModel.getElementAt(lastReceiveMessage.friend_id);
+                            Friend friend = myListModel.searchElement(lastReceiveMessage.friend_id);
                             if (friend != null)
                             {
                                 //System.out.println("STAVSYA");
@@ -168,6 +168,7 @@ public class MainWindowClientIm extends javax.swing.JFrame {
         if (CurrentStatus != OFFLINE_STATUS)
         {
             threadWrite.closedSession();
+            threadWrite =   null;
         }
     }
     public void initializeThreadWriter()
@@ -186,7 +187,7 @@ public class MainWindowClientIm extends javax.swing.JFrame {
           
             threadWriter.setPriority(ThreadWorker.NORM_PRIORITY);
             threadWriter.start();
-            this.threadWrite= threadWriter;
+            threadWrite= threadWriter;
             //return true;// may be
         }
     }
@@ -332,15 +333,23 @@ public class MainWindowClientIm extends javax.swing.JFrame {
                 {
                     closeThreadWrite();
                     CurrentStatus   =   OFFLINE_STATUS;
-                    FriendList.removeAll();       
+                    FriendList.setModel(new FriendListModel(new ArrayList()));
+                   // myListModel.removeAll();       
                 }
                 else if (CurrentStatus != status)
                 {
                     String json = gson.toJson(status);
                     int prevStatus = CurrentStatus;
                     try {
-                        threadWrite.sendMessage( new ObjectExchangeWrap(ThreadWorker.OUT_CLIENT_CHANGE_STATUS, json).getObjectExchange());
-                        CurrentStatus   =   status;
+                        if (threadWrite !=   null)
+                        {
+                            threadWrite.sendMessage( new ObjectExchangeWrap(ThreadWorker.OUT_CLIENT_CHANGE_STATUS, json).getObjectExchange());
+                            CurrentStatus   =   status;
+                        }
+                        else 
+                        {
+                            setUserStatus(prevStatus);
+                        }
                     }
                     catch (IOException e){
                         setUserStatus(prevStatus);
@@ -366,9 +375,12 @@ public class MainWindowClientIm extends javax.swing.JFrame {
         String textMessage = gson.toJson(nick);
         this.setEnabled(true);
         try 
-        {            
-            threadWrite.sendMessage( new ObjectExchangeWrap(ThreadWorker.OUT_FRIEND_CHANGE_NICK, textMessage).getObjectExchange());
-            myListModel.changeElementNickName(currentSessionId, nick);
+        {     
+            if (threadWrite != null)
+            {
+                threadWrite.sendMessage( new ObjectExchangeWrap(ThreadWorker.OUT_FRIEND_CHANGE_NICK, textMessage).getObjectExchange());
+                myListModel.changeElementNickName(currentSessionId, nick);
+            }
         }
         catch (IOException e)
         {
@@ -425,7 +437,7 @@ public class MainWindowClientIm extends javax.swing.JFrame {
     private void sendMessage()
     {
         Document document=  MessageTextPane.getDocument();
-        if (CurrentStatus   !=  OFFLINE_STATUS)
+        if ((threadWrite!= null)&& (CurrentStatus   !=  OFFLINE_STATUS))
         {
             String  textMessage;
             textMessage = TextMessageField.getText().trim();
@@ -534,6 +546,7 @@ public class MainWindowClientIm extends javax.swing.JFrame {
         else
         {
             status = OFFLINE_STATUS;
+            threadWrite =   null;
         }
          setUserStatus(status);
     }
